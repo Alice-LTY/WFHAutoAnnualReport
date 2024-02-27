@@ -1,11 +1,6 @@
 import os
 import pandas as pd
 
-def mount_drive():
-    """Mount Google Drive in Google Colab."""
-    from google.colab import drive
-    drive.mount('/content/drive')
-
 def create_output_directory(main_file_name, year, is_colab=True):
     """Create output directory based on the selected environment (Colab or Local)."""
     if is_colab:
