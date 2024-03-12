@@ -1,10 +1,11 @@
 """
-### 食道癌治療順序
+### 直腸癌治療順序
 """
 import os
 import pandas as pd
 
-def therapy_order_Esophagus(df, main_file_name, year, carcinoma_type):
+
+def therapy_order_Rectum(df, main_file_name, year, carcinoma_type):
     #### 資料選取
     therapy_order = ['class', 'optype_o', 'optype_h', 'rtmodal', 'ort_modal', 'srs', 'sls', 'chem_h', 'horm_h', 'immu_h', 'htep_h', 'targe_Tfacility', 'palli_h', 'other_T']
     therapy_df = df[therapy_order]
@@ -15,7 +16,7 @@ def therapy_order_Esophagus(df, main_file_name, year, carcinoma_type):
     therapy_df = therapy_df.reset_index()#.drop('index', axis=1)
     # therapy_df
 
-    ########################################## "食道癌「治療」定義 " ##########################################
+    ########################################## "直腸癌「治療」定義 " ##########################################
     # OP
     OP_df = therapy_df[~((therapy_df['optype_o'].isin([0, 99])) & (therapy_df['optype_h'].isin([0, 99])))]
     OP_df = OP_df.reset_index()#.drop('index', axis=1)
@@ -31,10 +32,10 @@ def therapy_order_Esophagus(df, main_file_name, year, carcinoma_type):
     CHEM_df = CHEM_df.reset_index()#.drop('index', axis=1)
     chem = set(CHEM_df['index'])
 
-    # IMMU
-    IMMU_df = therapy_df[(therapy_df['immu_h'] >= 1) & (therapy_df['immu_h'] <= 33)]
-    IMMU_df = IMMU_df.reset_index()#.drop('index', axis=1)
-    immu = set(IMMU_df['index'])
+    # TARGE
+    TARGE_df = therapy_df[(therapy_df['targe_Tfacility'] >= 1) & (therapy_df['targe_Tfacility'] <= 31)]
+    TARGE_df = TARGE_df.reset_index()#.drop('index', axis=1)
+    tg = set(TARGE_df['index'])
 
     # PALLI
     PALLI_df = therapy_df[(therapy_df['palli_h'] >= 1) & (therapy_df['palli_h'] <= 7)]
@@ -50,20 +51,18 @@ def therapy_order_Esophagus(df, main_file_name, year, carcinoma_type):
     sls_df = therapy_df[(therapy_df['sls'].isin([2,6]))]
     sls_df = sls_df.reset_index()#.drop('index', axis=1)
     sls = set(sls_df['index'])
-    ########################################## "食道癌「治療」定義 end" ##########################################
+    ########################################## "直腸癌「治療」定義 end" ##########################################
 
-    ########################################## "食道癌「治療」範圍" ##########################################
+    ########################################## "直腸癌「治療」範圍" ##########################################
     therapy_types = {
-    "手術": op - (rt | chem),
-    "手術合併化療與放療": op & rt & chem,
-    "手術合併放療": (op & rt) - (op & rt & chem),
-    "手術合併化療": (op & chem) - (op & rt & chem),
-    "同步化療與放療或/與標靶治療": sls & (chem & rt - (op & rt & chem) - (rt & chem & immu)),
-    "非同步化療與放療或/與標靶治療": (chem & rt - (op & rt & chem) - (rt & chem & immu)) - (sls & (chem & rt - (op & rt & chem) - (rt & chem & immu))),
-    "放療合併化療與免疫治療": (rt & chem & immu),
+    "手術": op - (rt | chem | tg),
+    "手術合併化療與放療": (op & rt & chem) - (op & rt & chem & tg),
+    "手術合併化療": (op & chem) - (op & chem & rt),
+    "手術合併放療": (op & rt) - (op & rt & chem), 
+    "同步化療與放療": sls & (chem & rt - (op & rt & chem)),
+    "非同步化療與放療": (chem & rt - (op & rt & chem)) - sls & (chem & rt - (op & rt & chem)),
     "放療": rt - (op | chem),
-    "化療合併免疫治療": (immu & chem) - (rt & chem & immu),
-    "化療": chem - (op | rt),
+    "化療或/與標靶治療": chem - (op | rt | tg),
     "緩和治療": palli_therapy,
     "其他治療": other_therapy
     }
@@ -91,5 +90,5 @@ def therapy_order_Esophagus(df, main_file_name, year, carcinoma_type):
 
     #Save file
     result_df.to_excel(f'{main_file_name}/output{year}/{year}{carcinoma_type}/{year}{carcinoma_type}Report/{year}_{carcinoma_type}_therapy_type.xlsx', sheet_name='therapy')
-    ########################################## "食道癌「治療」範圍 end" ##########################################
+    ########################################## "直腸癌「治療」範圍 end" ##########################################
     return result_df
